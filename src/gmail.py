@@ -1,25 +1,44 @@
 import base64
 import re
-from urllib.parse import unquote
-
 from googleapiclient.discovery import build
 
 
+def build_query(mode="today"):
+    """
+    Build Gmail search query.
+    """
+
+    if mode == "today":
+        return "from:substack.com newer_than:1d"
+
+    if mode == "yesterday":
+        return "from:substack.com newer_than:2d older_than:1d"
+
+    if mode == "week":
+        return "from:substack.com newer_than:7d"
+
+    return "from:substack.com newer_than:7d"
+
+
 def find_html_part(payload):
-    """Find the HTML part of an email."""
+    """Recursively find the HTML part of an email."""
+
     if payload.get("mimeType") == "text/html":
         return payload
 
     for part in payload.get("parts", []):
         result = find_html_part(part)
+
         if result:
             return result
 
     return None
 
 
-def extract_article_url(html):
-    """Extract the best article URL from a Substack email."""
+def extract_url(html):
+    """
+    Extract the best URL from a Substack email.
+    """
 
     matches = re.findall(r'https://[^"\']+', html)
 
@@ -27,36 +46,49 @@ def extract_article_url(html):
 
         url = url.replace("&amp;", "&")
 
-        # Direct article
+        # Articles
         if "open.substack.com/pub/" in url:
             return url.split("?")[0]
 
-        if ".substack.com/p/" in url:
+        # Notes / Threads
+        if "substack.com/chat/" in url:
             return url.split("?")[0]
 
-        # Decode redirect links
-        if "next=https" in url:
-            try:
-                real = url.split("next=")[1]
-                real = real.split("&")[0]
-                real = unquote(real)
-
-                if ".substack.com/p/" in real:
-                    return real
-
-            except Exception:
-                pass
+        # Live streams
+        if "open.substack.com/live-stream/" in url:
+            return url.split("?")[0]
 
     return ""
 
 
-def get_substack_emails(creds):
+def detect_email_type(subject, url):
+    """
+    Classify the email.
+    """
 
-    service = build("gmail", "v1", credentials=creds)
+    if "New thread" in subject:
+        return "note"
+
+    if "Live" in subject:
+        return "live"
+
+    if "open.substack.com/pub/" in url:
+        return "article"
+
+    return "notification"
+
+
+def get_substack_emails(creds, mode="week"):
+
+    service = build(
+        "gmail",
+        "v1",
+        credentials=creds,
+    )
 
     results = service.users().messages().list(
         userId="me",
-        q="from:substack.com newer_than:7d",
+       q=build_query(mode),
         maxResults=10,
     ).execute()
 
@@ -100,20 +132,14 @@ def get_substack_emails(creds):
                     errors="ignore",
                 )
 
-                article_url = extract_article_url(html)
+                article_url = extract_url(html)
 
         subject = get_header("Subject")
 
-        email_type = "article"
-
-        if "New thread" in subject:
-            email_type = "note"
-
-        elif "Live" in subject:
-            email_type = "live"
-
-        elif article_url == "":
-            email_type = "notification"
+        email_type = detect_email_type(
+            subject,
+            article_url,
+        )
 
         emails.append(
             {

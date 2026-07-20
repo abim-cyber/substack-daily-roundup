@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from read_tracker import is_read
+
 
 def create_section(title, emails):
 
@@ -10,31 +12,83 @@ def create_section(title, emails):
 
     for email in emails:
 
-        read_button = ""
+        status = ""
+
+        if email["url"] and is_read(email["url"]):
+            status = """
+            <div style="
+                color:green;
+                font-weight:bold;
+                margin:10px 0;
+            ">
+                ✅ Finished
+            </div>
+            """
+
+        button = ""
 
         if email["url"]:
-            read_button = (
-                f'<a class="button" href="{email["url"]}" '
-                f'target="_blank">Read →</a>'
+
+            if email["type"] == "article":
+                text = "📖 Read Article"
+
+            elif email["type"] == "note":
+                text = "💬 Open Note"
+
+            elif email["type"] == "live":
+                text = "🔴 Join Live"
+
+            else:
+                text = "Open"
+
+            button = (
+                f'<a class="button" '
+                f'href="{email["url"]}" '
+                f'target="_blank">{text}</a>'
             )
 
         html += f"""
         <div class="card">
-            <div class="sender">{email["sender"]}</div>
-            <h3>{email["subject"]}</h3>
-            <div class="date">{email["date"]}</div>
-            {read_button}
+
+            <div class="sender">
+                {email["sender"]}
+            </div>
+
+            <h3>
+                {email["subject"]}
+            </h3>
+
+            <div class="date">
+                {email["date"]}
+            </div>
+
+            {status}
+
+            {button}
+
         </div>
         """
 
     return html
 
 
-def generate_html(emails):
+def generate_html(emails, title="Last 7 Days"):
 
-    articles = [e for e in emails if e["type"] == "article"]
-    notes = [e for e in emails if e["type"] == "note"]
-    live = [e for e in emails if e["type"] == "live"]
+    articles = [
+        e for e in emails
+        if e["type"] == "article"
+    ]
+
+    notes = [
+        e for e in emails
+        if e["type"] == "note"
+    ]
+
+    live = [
+        e for e in emails
+        if e["type"] == "live"
+    ]
+
     notifications = [
         e for e in emails
         if e["type"] == "notification"
@@ -42,50 +96,65 @@ def generate_html(emails):
 
     html = f"""
 <!DOCTYPE html>
+
 <html>
 
 <head>
 
 <meta charset="utf-8">
 
-<title>Substack Daily Roundup</title>
+<title>Substack Creator Companion</title>
 
 <style>
 
 body {{
     font-family: Arial, sans-serif;
     max-width: 1000px;
-    margin: auto;
-    padding: 40px;
-    background: #fafafa;
+    margin:auto;
+    padding:40px;
+    background:#fafafa;
 }}
 
 h1 {{
-    margin-bottom: 40px;
+    margin-bottom:10px;
+}}
+
+.subtitle {{
+    color:gray;
+    font-size:20px;
+    margin-bottom:30px;
+}}
+
+.summary {{
+    background:#f4f4f4;
+    padding:15px;
+    border-radius:10px;
+    margin:25px 0;
+    font-weight:bold;
 }}
 
 h2 {{
-    margin-top: 40px;
-    border-bottom: 2px solid #ddd;
-    padding-bottom: 10px;
+    margin-top:40px;
+    border-bottom:2px solid #ddd;
+    padding-bottom:10px;
 }}
 
 .card {{
-    background: white;
-    border-radius: 12px;
-    padding: 20px;
-    margin: 20px 0;
-    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    background:white;
+    border-radius:12px;
+    padding:20px;
+    margin:20px 0;
+    box-shadow:0 2px 8px rgba(0,0,0,.08);
 }}
 
 .sender {{
-    color: gray;
-    font-size: 14px;
+    color:gray;
+    font-size:14px;
 }}
 
 .date {{
-    color: gray;
-    margin: 15px 0;
+    color:gray;
+    margin:15px 0;
 }}
 
 .button {{
@@ -107,7 +176,25 @@ h2 {{
 
 <body>
 
-<h1>📬 Substack Daily Roundup</h1>
+<h1>
+📬 Substack Creator Companion
+</h1>
+
+<div class="subtitle">
+
+Viewing:
+<strong>{title}</strong>
+
+</div>
+
+<div class="summary">
+
+📚 {len(articles)} Articles |
+💬 {len(notes)} Notes |
+🔴 {len(live)} Live |
+🔔 {len(notifications)} Notifications
+
+</div>
 
 {create_section("📚 Articles", articles)}
 
