@@ -8,7 +8,12 @@ def main():
 
     emails = get_substack_emails(creds)
 
-    print(f"Found {len(emails)} Substack emails.")
+    print(f"Found {len(emails)} Substack emails.\n")
+
+    for email in emails:
+        print("=" * 80)
+        print(email["subject"])
+        print(email["url"])
 
     generate_html(emails)
 
