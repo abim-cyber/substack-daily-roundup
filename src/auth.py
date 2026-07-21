@@ -9,7 +9,8 @@ SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly"
 ]
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+# Always point to the project folder
+BASE_DIR = Path.home() / "Documents" / "Projects" / "substack-daily-roundup"
 
 TOKEN_FILE = BASE_DIR / "token.json"
 CREDENTIALS_FILE = BASE_DIR / "credentials.json"

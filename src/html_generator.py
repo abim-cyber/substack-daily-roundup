@@ -3,6 +3,20 @@ from pathlib import Path
 from read_tracker import is_read
 
 
+APP_DIR = (
+    Path.home()
+    / "Documents"
+    / "Substack Creator Companion"
+)
+
+APP_DIR.mkdir(
+    parents=True,
+    exist_ok=True,
+)
+
+OUTPUT_FILE = APP_DIR / "roundup.html"
+
+
 def create_section(title, emails):
 
     if not emails:
@@ -46,9 +60,7 @@ def create_section(title, emails):
                 {email["sender"]}
             </div>
 
-            <h3>
-                {email["subject"]}
-            </h3>
+            <h3>{email["subject"]}</h3>
 
             <div class="date">
                 {email["date"]}
@@ -102,70 +114,70 @@ def generate_html(emails, title="Last 7 Days"):
 body {{
     font-family: Arial, sans-serif;
     max-width: 1000px;
-    margin: auto;
-    padding: 40px;
-    background: #fafafa;
+    margin:auto;
+    padding:40px;
+    background:#fafafa;
 }}
 
 h1 {{
-    margin-bottom: 10px;
+    margin-bottom:10px;
 }}
 
 .subtitle {{
-    color: gray;
-    font-size: 20px;
-    margin-bottom: 30px;
+    color:gray;
+    font-size:20px;
+    margin-bottom:30px;
 }}
 
 .summary {{
-    background: #f4f4f4;
-    padding: 15px;
-    border-radius: 10px;
-    margin: 25px 0;
-    font-weight: bold;
+    background:#f4f4f4;
+    padding:15px;
+    border-radius:10px;
+    margin:25px 0;
+    font-weight:bold;
 }}
 
 h2 {{
-    margin-top: 40px;
-    border-bottom: 2px solid #ddd;
-    padding-bottom: 10px;
+    margin-top:40px;
+    border-bottom:2px solid #ddd;
+    padding-bottom:10px;
 }}
 
 .card {{
-    background: white;
-    border-radius: 12px;
-    padding: 20px;
-    margin: 20px 0;
-    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    background:white;
+    border-radius:12px;
+    padding:20px;
+    margin:20px 0;
+    box-shadow:0 2px 8px rgba(0,0,0,.08);
 }}
 
 .sender {{
-    color: gray;
-    font-size: 14px;
+    color:gray;
+    font-size:14px;
 }}
 
 .date {{
-    color: gray;
-    margin: 15px 0;
+    color:gray;
+    margin:15px 0;
 }}
 
 .finished {{
-    color: green;
-    font-weight: bold;
-    margin: 10px 0;
+    color:green;
+    font-weight:bold;
+    margin:10px 0;
 }}
 
 .button {{
-    display: inline-block;
-    padding: 10px 18px;
-    background: #2563eb;
-    color: white;
-    text-decoration: none;
-    border-radius: 8px;
+    display:inline-block;
+    padding:10px 18px;
+    background:#2563eb;
+    color:white;
+    text-decoration:none;
+    border-radius:8px;
 }}
 
 .button:hover {{
-    background: #1d4ed8;
+    background:#1d4ed8;
 }}
 
 </style>
@@ -174,15 +186,11 @@ h2 {{
 
 <body>
 
-<h1>
-📬 Substack Creator Companion
-</h1>
+<h1>📬 Substack Creator Companion</h1>
 
 <div class="subtitle">
-
 Viewing:
 <strong>{title}</strong>
-
 </div>
 
 <div class="summary">
@@ -207,9 +215,11 @@ Viewing:
 </html>
 """
 
-    Path("roundup.html").write_text(
+    OUTPUT_FILE.write_text(
         html,
         encoding="utf-8",
     )
 
-    print("✅ roundup.html created")
+    print(f"✅ Dashboard created: {OUTPUT_FILE}")
+
+    return OUTPUT_FILE

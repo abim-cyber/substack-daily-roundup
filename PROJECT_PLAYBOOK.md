@@ -1,4 +1,9 @@
 # 📬 Substack Creator Companion - Project Playbook
+> Status: Released
+>
+> Version: 1.0
+>
+> Release Date: July 2026
 
 ## Project Vision
 
