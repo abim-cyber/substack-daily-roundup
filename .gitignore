@@ -1,6 +1,20 @@
+# Virtual environment
 venv/
 .env
+
+# Python
 __pycache__/
 *.pyc
+
+# Gmail authentication
 token.json
 credentials.json
+
+# Generated application files
+roundup.html
+note_email.html
+sample_email.html
+read_status.json
+
+# macOS
+.DS_Store

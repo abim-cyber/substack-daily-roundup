@@ -16,11 +16,7 @@ def create_section(title, emails):
 
         if email["url"] and is_read(email["url"]):
             status = """
-            <div style="
-                color:green;
-                font-weight:bold;
-                margin:10px 0;
-            ">
+            <div class="finished">
                 ✅ Finished
             </div>
             """
@@ -29,22 +25,18 @@ def create_section(title, emails):
 
         if email["url"]:
 
-            if email["type"] == "article":
-                text = "📖 Read Article"
-
-            elif email["type"] == "note":
-                text = "💬 Open Note"
-
-            elif email["type"] == "live":
-                text = "🔴 Join Live"
-
-            else:
-                text = "Open"
+            button_text = {
+                "article": "📖 Read Article",
+                "note": "💬 Open Note",
+                "live": "🔴 Join Live",
+                "notification": "Open",
+            }.get(email["type"], "Open")
 
             button = (
                 f'<a class="button" '
                 f'href="{email["url"]}" '
-                f'target="_blank">{text}</a>'
+                f'target="_blank">'
+                f'{button_text}</a>'
             )
 
         html += f"""
@@ -110,64 +102,70 @@ def generate_html(emails, title="Last 7 Days"):
 body {{
     font-family: Arial, sans-serif;
     max-width: 1000px;
-    margin:auto;
-    padding:40px;
-    background:#fafafa;
+    margin: auto;
+    padding: 40px;
+    background: #fafafa;
 }}
 
 h1 {{
-    margin-bottom:10px;
+    margin-bottom: 10px;
 }}
 
 .subtitle {{
-    color:gray;
-    font-size:20px;
-    margin-bottom:30px;
+    color: gray;
+    font-size: 20px;
+    margin-bottom: 30px;
 }}
 
 .summary {{
-    background:#f4f4f4;
-    padding:15px;
-    border-radius:10px;
-    margin:25px 0;
-    font-weight:bold;
+    background: #f4f4f4;
+    padding: 15px;
+    border-radius: 10px;
+    margin: 25px 0;
+    font-weight: bold;
 }}
 
 h2 {{
-    margin-top:40px;
-    border-bottom:2px solid #ddd;
-    padding-bottom:10px;
+    margin-top: 40px;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 10px;
 }}
 
 .card {{
-    background:white;
-    border-radius:12px;
-    padding:20px;
-    margin:20px 0;
-    box-shadow:0 2px 8px rgba(0,0,0,.08);
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
 }}
 
 .sender {{
-    color:gray;
-    font-size:14px;
+    color: gray;
+    font-size: 14px;
 }}
 
 .date {{
-    color:gray;
-    margin:15px 0;
+    color: gray;
+    margin: 15px 0;
+}}
+
+.finished {{
+    color: green;
+    font-weight: bold;
+    margin: 10px 0;
 }}
 
 .button {{
-    display:inline-block;
-    padding:10px 18px;
-    background:#2563eb;
-    color:white;
-    text-decoration:none;
-    border-radius:8px;
+    display: inline-block;
+    padding: 10px 18px;
+    background: #2563eb;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
 }}
 
 .button:hover {{
-    background:#1d4ed8;
+    background: #1d4ed8;
 }}
 
 </style>

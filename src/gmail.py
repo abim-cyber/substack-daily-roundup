@@ -1,5 +1,6 @@
 import base64
 import re
+
 from googleapiclient.discovery import build
 
 
@@ -8,25 +9,28 @@ def build_query(mode="today"):
     Build Gmail search query.
     """
 
-    if mode == "today":
-        return "from:substack.com newer_than:1d"
+    queries = {
+        "today": "from:substack.com newer_than:1d",
+        "yesterday": "from:substack.com newer_than:2d older_than:1d",
+        "week": "from:substack.com newer_than:7d",
+    }
 
-    if mode == "yesterday":
-        return "from:substack.com newer_than:2d older_than:1d"
-
-    if mode == "week":
-        return "from:substack.com newer_than:7d"
-
-    return "from:substack.com newer_than:7d"
+    return queries.get(
+        mode,
+        queries["week"],
+    )
 
 
 def find_html_part(payload):
-    """Recursively find the HTML part of an email."""
+    """
+    Recursively find the HTML part of an email.
+    """
 
     if payload.get("mimeType") == "text/html":
         return payload
 
     for part in payload.get("parts", []):
+
         result = find_html_part(part)
 
         if result:
@@ -40,7 +44,10 @@ def extract_url(html):
     Extract the best URL from a Substack email.
     """
 
-    matches = re.findall(r'https://[^"\']+', html)
+    matches = re.findall(
+        r'https://[^"\']+',
+        html,
+    )
 
     for url in matches:
 
@@ -78,7 +85,10 @@ def detect_email_type(subject, url):
     return "notification"
 
 
-def get_substack_emails(creds, mode="week"):
+def get_substack_emails(
+    creds,
+    mode="week",
+):
 
     service = build(
         "gmail",
@@ -88,11 +98,14 @@ def get_substack_emails(creds, mode="week"):
 
     results = service.users().messages().list(
         userId="me",
-       q=build_query(mode),
+        q=build_query(mode),
         maxResults=10,
     ).execute()
 
-    messages = results.get("messages", [])
+    messages = results.get(
+        "messages",
+        [],
+    )
 
     emails = []
 
@@ -106,6 +119,7 @@ def get_substack_emails(creds, mode="week"):
         headers = email["payload"]["headers"]
 
         def get_header(name):
+
             return next(
                 (
                     h["value"]
@@ -115,39 +129,44 @@ def get_substack_emails(creds, mode="week"):
                 "",
             )
 
-        html_part = find_html_part(email["payload"])
+        html_part = find_html_part(
+            email["payload"]
+        )
 
-        article_url = ""
+        url = ""
 
         if html_part:
 
-            data = html_part["body"].get("data")
+            data = html_part["body"].get(
+                "data"
+            )
 
             if data:
 
-                html = base64.urlsafe_b64decode(
-                    data
-                ).decode(
-                    "utf-8",
-                    errors="ignore",
+                html = (
+                    base64.urlsafe_b64decode(
+                        data
+                    )
+                    .decode(
+                        "utf-8",
+                        errors="ignore",
+                    )
                 )
 
-                article_url = extract_url(html)
+                url = extract_url(html)
 
         subject = get_header("Subject")
-
-        email_type = detect_email_type(
-            subject,
-            article_url,
-        )
 
         emails.append(
             {
                 "subject": subject,
                 "sender": get_header("From"),
                 "date": get_header("Date"),
-                "url": article_url,
-                "type": email_type,
+                "url": url,
+                "type": detect_email_type(
+                    subject,
+                    url,
+                ),
             }
         )
 

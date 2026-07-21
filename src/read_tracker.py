@@ -15,11 +15,15 @@ def load_read_status():
     if not path.exists():
         return {}
 
-    return json.loads(
-        path.read_text(
-            encoding="utf-8"
+    try:
+        return json.loads(
+            path.read_text(
+                encoding="utf-8"
+            )
         )
-    )
+
+    except json.JSONDecodeError:
+        return {}
 
 
 def save_read_status(status):

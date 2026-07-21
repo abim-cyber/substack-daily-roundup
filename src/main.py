@@ -1,41 +1,22 @@
+from email.utils import parsedate_to_datetime
+
 from auth import authenticate
+from dashboard import (
+    apply_filters,
+    choose_creator,
+    choose_time_range,
+    choose_view,
+)
 from gmail import get_substack_emails
 from html_generator import generate_html
-from email.utils import parsedate_to_datetime
-from read_tracker import mark_read
-
-
-print("""
-==============================
-📬 Substack Creator Companion
-==============================
-
-Choose what to load
-
-1. Today
-2. Yesterday
-3. Last 7 Days
-""")
-
-choice = input("Choice: ").strip()
-
-mode = "week"
-title = "Last 7 Days"
-
-if choice == "1":
-    mode = "today"
-    title = "Today"
-
-elif choice == "2":
-    mode = "yesterday"
-    title = "Yesterday"
-
-elif choice == "3":
-    mode = "week"
-    title = "Last 7 Days"
+from read_tracker import is_read, mark_read
 
 
 def main():
+
+    mode, title = choose_time_range()
+
+    view = choose_view()
 
     creds = authenticate()
 
@@ -49,15 +30,25 @@ def main():
         reverse=True,
     )
 
-    print(f"\nFound {len(emails)} Substack emails.\n")
+    creator = choose_creator(emails)
 
-    for i, email in enumerate(emails, start=1):
+    emails = apply_filters(
+        emails,
+        view,
+        creator,
+        is_read,
+    )
 
+    print(f"\nFound {len(emails)} matching emails.\n")
+
+    for i, email in enumerate(
+        emails,
+        start=1,
+    ):
         print(f"{i}. {email['subject']}")
 
     selection = input(
-        "\nEnter number to mark as Finished "
-        "(Press Enter to skip): "
+        "\nMark item as Finished (Enter number or press Enter): "
     ).strip()
 
     if selection:
@@ -78,12 +69,21 @@ def main():
                 print("✅ Marked as Finished")
 
         except ValueError:
-
             print("Invalid selection.")
+
+    subtitle = title
+
+    if view == "unfinished":
+        subtitle += " • Unfinished"
+    else:
+        subtitle += " • All Content"
+
+    if creator:
+        subtitle += f" • {creator}"
 
     generate_html(
         emails,
-        title,
+        subtitle,
     )
 
 
